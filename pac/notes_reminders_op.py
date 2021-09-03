@@ -1,90 +1,25 @@
-#miscellaneous operations go here!
-import requests
-import os
-import re
-import wikipedia
-import datetime
-import wolframalpha
-import webbrowser
 import tabulate
 import time as samay
+import sqlite3 as sql
 from plyer import notification
 
-
 try:
-    from pac import mailer
     from pac import voice_io
     from pac import invoice
     from pac import get_dirs
 
 except ModuleNotFoundError:
-    import mailer
     import invoice
     import voice_io
     import get_dirs
     
-from urllib import request
-from bs4 import BeautifulSoup as soup
-import sqlite3 as sql
-from pyowm.owm import OWM 
-from pyowm.utils import timestamps
-import geocoder
-
-g = geocoder.ip('me')
-ct=(g.city)
-
-
-#wolframalpha operation
-def wolfram_try(question):    
-    app_id = "AT3YLY-P2L67K557P"
-    client = wolframalpha.Client(app_id) 
-    res = client.query(question) 
-    answer = next(res.results)["subpod"]["plaintext"]
-    return answer
-
-#weather
-def weather_curr():      
-    api_key = "cd140d1c1404cba5de2dabf6bcd00f52" 
-    base_url = "http://api.openweathermap.org/data/2.5/weather?"
-    url = base_url + "&q=" + ct + "&appid=" + api_key
-    response = requests.get(url)  
-    x = response.json()  
-    if x["cod"] == "404":  
-        voice_io.show("Oops! it looks like i ran into a problem fetching your request, maybe try again later?")
-    else:
-        y = x["main"]  
-        curr_temperature = y["temp"]  
-        curr_pressure = y["pressure"]  
-        curr_humidity = y["humidity"]  
-        z = x["weather"]  
-        weather_desc = z[0]["description"]  
-        voice_io.show(f"The current temperatre in {ct} is {str(round(curr_temperature-273))}°C" + ". It's a " +str(weather_desc))  
-
-#weather forecaster
-def weather_forec():
-    voice_io.show("Sorry i am currently restricted to show weather forecast for tomorrow only. \nLook out for future updates and see if my handcuffs are set free. Here's tomorrow's weather forecast anyway.")
-    owm = OWM('cd140d1c1404cba5de2dabf6bcd00f52')
-    mgr=owm.weather_manager()
-    loc = mgr.weather_at_place(ct)
-    weather = loc.weather
-    temp = weather.temperature(unit='celsius')
-    for key,val in temp.items():
-        if key=="temp":
-            voice_io.show(f'\nThe temperature tommorow will be around {val}°C.')
-        else:
-            continue
-    loa = mgr.forecast_at_place(ct,'3h')
-    tomorrow=timestamps.tomorrow()
-    forecasttt=loa.get_weather_at(tomorrow)
-    status=(forecasttt.status)
-    voice_io.show(f'And the sky would remain {status}')
-#weather_forec(ct)
-
 
 def time_now():
     t = samay.localtime() 
     time_now = samay.strftime("%Y-%m-%d %H:%M:%S", t)
     return time_now
+
+
 
 def note_rem_create():
     con = sql.connect(get_dirs.DB_NOTES_REMINDERS)
@@ -316,8 +251,6 @@ def reminder_read():
     con.close()
 
 
-#okay so reminder_remind() works completely fine when standalone, but the problem now is that when we run it here, the while loop takes away the terminal executing the commands every second and thus it's a lot fucked up then it should've been! so rather than continuing with this right now imma give this a pause for now and work on it later and develop a script thingy that when reminder_remind() is called it is done in the background and whatever whatever. MULTITHREADING is prolly where the key to this prob lies.
-
 def reminder_remind():
     def notify(reminder):
         notification.notify(
@@ -363,186 +296,3 @@ def reminder_remind():
                     samay.sleep(1)
                     continue
         con.close()
-
-
-
-#Time & Date
-def date():
-    x = datetime.datetime.now().strftime("%d/%m/%Y")  
-    voice_io.show(f"Today's date is {x} (DD/MM/YYYY)")
-
-def time():
-    #x=datetime.datetime.now().strftime("%H:%M:%S")    
-    localtime = samay.localtime()
-    x = samay.strftime("%I:%M:%S %p", localtime)
-    voice_io.show(f"The current time is {x}") 
-
-def year():
-    x=datetime.datetime.now().strftime("%Y")
-    voice_io.show(f"The current year is {x}")
-
-def month():
-    x=datetime.datetime.now().strftime("%B")
-    voice_io.show(f"The current month is {x}") 
-
-def day():
-    x=datetime.datetime.now().strftime("%A")
-    voice_io.show(f"Today it is a {x}")
-
-    #month()
-    #day()
-    #year()
-    #time()
-    #date()
-
-#Send Emails
-
-def sendEmail(): 
-    mailer.mail_sender()
-    
-#sendEmail()
-
-#Play Offline/Online Songs
-def song_offline():
-    voice_io.show("Alright, fetching your offline music playlist right away!")
-    music_dir = get_dirs.MUSIC
-    songs = os.listdir(music_dir)
-    voice_io.show(songs)
-    random = os.startfile(os.path.join(music_dir, songs[1]))
-        
-def song_online(query):    
-    reg_ex = re.search('play (.+)', query)
-    if reg_ex:
-        song = reg_ex.group(1)
-        url="https://www.youtube.com/results?search_query="
-        url1=song.split()
-        for i in range(len(url1)):
-            url+=url1[i]
-            if i!=-1:
-                url+="+"
-        #voice_io.show(url)
-        voice_io.show("Your requested song will now be searched on youtube in your default browser! Make sure to click the first video link to play it. SORRY FOR THE INCONVINIENCE, We're Working on it.")
-        webbrowser.open(url)
-    else:
-        voice_io.show("Uh-oh looks like i can't perform this operation right now, maybe try again later!")
-
-
-#Web Search
-def web(query):
-    query=query.lower()
-    if 'what is' in query:
-        try:
-            #clear.clear()
-            voice_io.show(wolfram_try(query))
-
-        except:
-            try:
-                voice_io.show('Searching Wikipedia...\n')
-                query1 = query.replace("what is ","")
-                results = wikipedia.summary(query1)
-                voice_io.show("According to Wikipedia,")
-                voice_io.show(results)
-            except:
-                voice_io.show(f"Could not find any results relating to {query1}, \nplease make sure you're entering a valid input!")
-
-
-    elif 'meaning of' in query:
-        try:
-            voice_io.show('Searching Wikipedia...')
-            query1 = query.replace("meaning of ","")
-            results = wikipedia.summary(query1,sentences=1)
-            voice_io.show("According to Wikipedia")
-            voice_io.show(results)
-        except:
-            try:
-                #clear.clear()
-                voice_io.show(wolfram_try(query))
-            except:
-                voice_io.show(f"Could not find any results relating to {query1}, \nplease make sure you're entering a valid input!")
-    
-    elif 'define' in query:
-        try:
-            voice_io.show('Searching Wikipedia...')
-            query1 = query.replace("define ","")
-            results = wikipedia.summary(query1,sentences=1)
-            voice_io.show("According to Wikipedia")
-            voice_io.show(results)
-        except:
-            try:
-                #clear.clear()
-                voice_io.show(wolfram_try(query))
-            except:
-                voice_io.show(f"Could not find any results relating to {query1}, \nplease make sure you're entering a valid input!")
-
-    elif 'search' in query:
-        query = query.replace("search ", "")
-        voice_io.show(f"Searching google for '{query}'")
-        query = query.replace(" ", "+")
-        webbrowser.open(f"https://www.google.com/search?q={query}")
-
-    elif "where is" in query:
-        query = query.replace("where is ", "")
-        voice_io.show(f"Searching google maps for '{query}'")
-        location = query
-        voice_io.show("You asked to locate",location,"and here you go!")
-        webbrowser.open("https://www.google.nl/maps/place/" + location + "")
-
-    elif "open website" in query:
-        reg_ex = re.search('open website (.+)', query)
-        if reg_ex:
-            domain = reg_ex.group(1)
-            #voice_io.show(domain)
-            url='https://www.'+domain+".com"
-            webbrowser.open(url)
-            voice_io.show('The website you have requested will now be opened for you.')
-        else:
-            pass
-
-    elif 'youtube' in query:
-        voice_io.show("Alright, opening Youtube right away!\n")
-        webbrowser.open("https://www.youtube.com")
-
-    elif 'google' in query:
-        voice_io.show("Alright, opening Google right away!\n")
-        webbrowser.open("https://www.google.com")
-
-    elif 'instagram' in query:
-        voice_io.show("Alright, opening Instagram right away!")
-        webbrowser.open("https://www.instagram.com")
-    
-    elif 'twitter' in query:
-        voice_io.show("Alright, opening Twitter right away!")
-        webbrowser.open("https://www.twitter.com")
-    
-    elif 'reddit' in query:
-        voice_io.show("Alright, opening Reddit right away!")
-        webbrowser.open("https://www.reddit.com")
-    
-    elif 'facebook' in query:
-        voice_io.show("Alright, opening Facebook right away!")
-        webbrowser.open("https://www.facebook.com")
-
-    else:
-        try:
-            voice_io.show(wolfram_try(query))
-        except:
-            voice_io.show("Uh-oh! It looks like i ran into some problems, why don't you try again later?")
-
-#web()
-
-def news():
-    try:
-        news_url="https://news.google.com/news/rss"
-        Client=request.urlopen(news_url)
-        xml_page=Client.read()
-        Client.close()
-        soup_page=soup(xml_page,"xml")
-        news_list=soup_page.findAll("item")
-        for news in news_list[:15]:
-            x=news.title.text.encode('utf-8')
-            voice_io.show(x.decode(), end = "\n\n")
-    except Exception as e:
-            voice_io.show(e)
-            voice_io.show("Sorry couldn't fetch any record, maybe try again later.")
-        
-#news()

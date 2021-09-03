@@ -5,7 +5,7 @@ import webbrowser
 import random
 import getpass
 import base64
-from pac import install_packages as ip
+from pac import install_packages as ip, notes_reminders_op
 from pac import get_dirs
 from pac import clear
 
@@ -22,16 +22,21 @@ if not os.path.exists(get_dirs.PATH_USR_DATA):
     os.mkdir(get_dirs.PATH_USR_DATA)
 
 try:
-    import wolframalpha
     import requests 
     from pac import (
         usr_signup,
         voice_io,
         invoice,
-        file_operations,
-        mailer,
+        file_op,
+        mail_op,
+        news_op,
+        web_op,
         assistant_settings,
-        misc_operations)
+        weather_weatherforec_op,
+        notes_reminders_op,
+        song_op,
+        date_time_op,
+        )
     
     
 except ModuleNotFoundError:    
@@ -45,16 +50,21 @@ except ModuleNotFoundError:
         print("\nInstalling packages failed! Make sure you have a stable internet connection and all the requirements to install packages are fulfilled. Please try running this program again after resolving all issues, and if the problem still persists, contact the developer.")
         exit()
 
-    import wolframalpha
     import requests 
     from pac import (
             usr_signup,
             voice_io,
             invoice,
-            file_operations,
-            mailer,
+            file_op,
+            mail_op,
+            news_op,
+            web_op,
             assistant_settings,
-            misc_operations)
+            weather_weatherforec_op,
+            notes_reminders_op,
+            song_op,
+            date_time_op
+            )
 
 except OSError:
     print("\nPackage 'libespeak1'(debian based systems) or 'espeak'(fedora based systems), which is required by this program, is missing from your system!\nPlease install it from your distro repos and run this program again!")
@@ -123,7 +133,7 @@ def operation(query):
         "weather": ["weather","weather today","what's the weather","current weather","what's the temperature outside","how's the josh","temperature"], 
         "weather_frcst": ["weather forecast","weather tomorrow", "what's the weather forecast","how's the weather going to be"], 
         "song": ["play","play song","play songs"], 
-        "news": ["news","headlines","top headlines","today's news","tell me the news"]
+        "news": ["news","headlines","top headlines","today's news"]
     }
     n=""
     for i in op:
@@ -182,7 +192,7 @@ def main():
             result=result.lower()
             if result=="":
                 try:
-                    voice_io.show(misc_operations.wolfram_try(task))
+                    voice_io.show(web_op.wolfy(task))
 
                 except:
                     voice_io.show("Sorry i couldn't help you with that. Please try a valid operation.")
@@ -283,7 +293,7 @@ def main():
                     voice_io.show("Sorry but i cannot find the given directory, \ngoing forward with the entire home directory!")
                     search_dir = home
                 
-                file_operations.file_opener(obj_name, search_dir)
+                file_op.file_opener(obj_name, search_dir)
                     
             elif result == "search_file":
                 obj_name = task.replace("searchfile", "").strip()
@@ -322,8 +332,8 @@ def main():
                     search_dir = home
                 
                 voice_io.show(f"Searching for '{obj_name}' in {search_dir}.....")
-                folder_search_results = file_operations.folderSearch(obj_name, search_dir)
-                file_search_results = file_operations.fileSearch(obj_name, search_dir)
+                folder_search_results = file_op.folderSearch(obj_name, search_dir)
+                file_search_results = file_op.fileSearch(obj_name, search_dir)
                 if folder_search_results != [] or file_search_results != 0:
                     count_files = len(file_search_results)
                     count_folders = len(folder_search_results)
@@ -349,7 +359,7 @@ def main():
                                 parent_dir = file_search_results[choice]['root']
                                 voice_io.show(f"Opening file '{f_name}' from '{parent_dir}'.....")
                                 full_dir = parent_dir + "/" + f_name
-                                file_operations.open_file(full_dir)
+                                file_op.open_file(full_dir)
                             
                             elif choice - (count_files) in range(count_folders):
                                 choice -= count_files
@@ -357,7 +367,7 @@ def main():
                                 parent_dir = folder_search_results[choice]['root']
                                 voice_io.show(f"Opening folder '{f_name}' from '{parent_dir}' in the Files Explorer.....")
                                 full_dir = parent_dir + "/" + f_name
-                                file_operations.open_file(full_dir)
+                                file_op.open_file(full_dir)
 
                             else:
                                 voice_io.show("Opening failed : Sorry, but the entered number is not within the range of available options.")
@@ -404,7 +414,7 @@ def main():
                 voice_io.show(f"What should be the new name for '{obj_name}'?")
                 new_name = invoice.inpt(processed = False)
                                 
-                file_operations.rname(obj_name = obj_name,search_dir = search_dir, new_name = new_name)
+                file_op.rname(obj_name = obj_name,search_dir = search_dir, new_name = new_name)
 
             elif result=="copy":
                 search_dir = ""
@@ -443,7 +453,7 @@ def main():
                 voice_io.show(f"What should be the destination for '{obj_name}'?\n(Example : 'Downloads' or 'Documents/New Folder', case sensitive and without quotes).")
                 dest_dir = invoice.inpt(processed = False)
                                 
-                file_operations.copy(obj_name = obj_name, search_dir = search_dir, dest_dir = dest_dir)
+                file_op.copy(obj_name = obj_name, search_dir = search_dir, dest_dir = dest_dir)
 
             elif result=="move":
                 search_dir = ""
@@ -482,65 +492,65 @@ def main():
                 voice_io.show(f"What should be the destination for '{obj_name}'?\n(Example : 'Downloads' or 'Documents/New Folder', case sensitive and without quotes).")
                 dest_dir = invoice.inpt(processed = False)
                                 
-                file_operations.move(obj_name = obj_name, search_dir = search_dir, dest_dir = dest_dir)
+                file_op.move(obj_name = obj_name, search_dir = search_dir, dest_dir = dest_dir)
 
             elif result=="music_from_a_file":
                 pass
             
-            # misc operations:
             elif result == "weather":
-                misc_operations.weather_curr()
+                weather_weatherforec_op.weather_curr()
 
             elif result == "weather_frcst":
-                misc_operations.weather_forec()
+                weather_weatherforec_op.weather_curr()
 
             elif result == "date":
-                misc_operations.date()
+                date_time_op.date()
 
             elif result == "date_day":
-                misc_operations.day()
+                date_time_op.day()
 
             elif result == "date_month":
-                misc_operations.month()
+                date_time_op.month()
             
             elif result == "date_year":
-                misc_operations.year()
+                date_time_op.year()
 
             elif result == "time":
-                misc_operations.time()
+                date_time_op.time()
 
             elif result == "web_search":
                 if not voice_io.is_connected():
                     voice_io.show("You need to be hooked up to the Skynet in order to perform any web operations.")
                     continue
-                misc_operations.web(task.lower())
+                web_op.websearch(task.lower())
 
             elif result == "notes_read":
-                misc_operations.note_read()
+                notes_reminders_op.note_read()
 
             elif result == "notes_write":
-                misc_operations.note_write()
+                notes_reminders_op.note_write()
 
             elif result == "reminder_read":
-                misc_operations.reminder_read()
+                notes_reminders_op.reminder_read()
 
             elif result == "reminder_write":
-                misc_operations.reminder_write()
+                notes_reminders_op.reminder_write()
 
             elif result == "email":
-                misc_operations.sendEmail()
+                mail_op.sendEmail()
 
             elif result == "song":
                 if voice_io.is_connected():
-                    misc_operations.song_online(task.lower())
+                    song_op.song_online(task.lower())
 
                 else:
                     voice_io.show("Sorry, but it seems that you are disconnected from the internet.\nWould you like me to play from your offline music playlist?")
                     choice = invoice.inpt()
                     if choice in ["yes", "sure", "yep", "y", "duh", "ovio", "of course", "yeah"]:
-                        misc_operations.song_offline()
+                        song_op.song_offline()
+
             elif result == "news":
-                misc_operations.news()
+                news_op.main()
 
             # chat operarions
             elif result=="greet_hello":
@@ -665,7 +675,7 @@ def deleteFileUnspecified():
         voice_io.show("Sorry but i can not find the given directory, going forward with the entire home directory!")
         search_dir = home
                     
-    file_operations.deleteFile(file_name = file_name,search_dir = search_dir)
+    file_op.deleteFile(file_name = file_name,search_dir = search_dir)
 
 def deleteFolderUnspecified():
     search_dir = ""
@@ -698,7 +708,7 @@ def deleteFolderUnspecified():
         voice_io.show("Sorry but i can not find the given directory, going forward with the entire home directory!")
         search_dir = home
                     
-    file_operations.deleteFolder(folder_name = folder_name,search_dir = search_dir)
+    file_op.deleteFolder(folder_name = folder_name,search_dir = search_dir)
 
 def pda_help():
     voice_io.show("Select from the following Settings which can i help you with?")
@@ -728,16 +738,16 @@ def fetch_joke(st):
         voice_io.show("Oops! It looks like i ran out of my jokes, why don't you try again later.")
                 
 def feedback():
-    mailer.feedback_sender()
+    mail_op.feedback_sender()
     
 def op_help():
     voice_io.show("Alright, So What operations do you need help with? (just enter the operation, for example 'news', and i'll tell you its general syntax and what it does too.)")
     x=invoice.inpt()
     x=x.lower()
     if "news" in x:
-        voice_io.show("With the News operation you can ask me to read out the top 15 news headlines of the moment.")
+        voice_io.show("With the News operation you can ask me to read out the top 20 news headlines from around the world and on any topic too. And if you're not satisfied with that, i can even look up specific news for you with my advanced news search feature.")
         voice_io.show("The General Syntax of this operation is: \n")
-        voice_io.show("\"Kori tell me today's news\" OR \"Hey read out today's top headlines\" OR \"Kori NEWS!\" (YOU GET THE IDEA)")
+        voice_io.show("\"Kori tell me today's top news\" OR \"Hey read out today's top headlines\" (YOU GET THE IDEA)")
         return
     elif "website" in x:
         voice_io.show("With the website operation you can ask me to open certain websites in your default browser.")
@@ -864,7 +874,7 @@ def srvc_help():
     voice_io.show("1. I can open all sorts of websites and fetch web queries for you.")
     voice_io.show("2. I can open and close apps for you.")
     voice_io.show("3. I can open, rename, move and delete files and folders for you.")
-    voice_io.show("4. I can read out today's news for you.")
+    voice_io.show("4. I can read out today's news for you and even let your search for news about whatever you want.")
     voice_io.show("5. I can tell you the current weather and the weather forecast for the next 7 days.")
     voice_io.show("6. I can manage your Notes and Reminders for you.")
     voice_io.show("7. I can send emails to your mail contacts for you.")

@@ -1,8 +1,11 @@
 import smtplib
 import webbrowser
 
-from pac import voice_io
-from pac import usr_signup
+try:
+    from pac import voice_io, usr_signup
+    
+except:
+    import voice_io, usr_signup
 
 def sendMail(sndr_mail,sndr_pw,rcpnt,msg_sub,msg_body):
     with smtplib.SMTP('smtp.gmail.com',587) as smtp:
