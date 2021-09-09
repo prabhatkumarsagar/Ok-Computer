@@ -4,6 +4,7 @@ from urllib.parse import non_hierarchical
 import webbrowser
 import random
 import getpass
+import re
 import base64
 from pac import install_packages as ip, notes_reminders_op
 from pac import get_dirs
@@ -132,7 +133,7 @@ def operation(query):
         "email": ["email","send a email","send an email","write an email","compose email","compose an email"], 
         "weather": ["weather","weather today","what's the weather","current weather","what's the temperature outside","how's the josh","temperature"], 
         "weather_frcst": ["weather forecast","weather tomorrow", "what's the weather forecast","how's the weather going to be"], 
-        "song": ["play","play song","play songs"], 
+        "song": ["play","song"], 
         "news": ["news","headlines","top headlines","today's news"]
     }
     n=""
@@ -168,8 +169,9 @@ def main():
         #usr_data = open(path_user_data)
         fetch_password()
         while usr_name == False:
-            voice_io.show("Invalid password! Press enter to try again.")
-            invoice.inpt(iterate = False)
+            getpass.getpass(voice_io.show("\nInvalid password! Press enter to try again.",show_output = False))
+            #voice_io.show("Invalid password! Press enter to try again.")
+            #invoice.inpt(iterate = False)
             fetch_password()
 
     else:
@@ -494,9 +496,6 @@ def main():
                                 
                 file_op.move(obj_name = obj_name, search_dir = search_dir, dest_dir = dest_dir)
 
-            elif result=="music_from_a_file":
-                pass
-            
             elif result == "weather":
                 weather_weatherforec_op.weather_curr()
 
@@ -540,14 +539,14 @@ def main():
                 mail_op.sendEmail()
 
             elif result == "song":
-                if voice_io.is_connected():
-                    song_op.song_online(task.lower())
-
+                task=task.lower()
+                reg_ex = re.search('play (.+)', task)
+                if reg_ex:
+                    song = reg_ex.group(1)
+                    song_op.main(song)
                 else:
-                    voice_io.show("Sorry, but it seems that you are disconnected from the internet.\nWould you like me to play from your offline music playlist?")
-                    choice = invoice.inpt()
-                    if choice in ["yes", "sure", "yep", "y", "duh", "ovio", "of course", "yeah"]:
-                        song_op.song_offline()
+                    song_op.main()
+
 
             elif result == "news":
                 news_op.main()

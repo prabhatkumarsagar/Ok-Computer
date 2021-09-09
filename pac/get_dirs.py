@@ -2,9 +2,13 @@ import os
 
 if os.name == 'nt':
 	HOME =  os.environ['USERPROFILE']
+	CDRIVERPATH = os.getcwd()
+	CDRIVERPATH = CDRIVERPATH+'\pac\chromedriver_win.exe'
         
 elif os.name == 'posix':
 	HOME = os.getenv("HOME")
+	CDRIVERPATH = os.getcwd()
+	CDRIVERPATH = CDRIVERPATH+'/pac/chromedriver_win.exe'
 
 #important user directories
 CUR_DIR = os.getcwd()
