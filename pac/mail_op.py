@@ -1,107 +1,272 @@
-import smtplib
-import webbrowser
+#pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib 
+import os
+from pac import usr_signup
+import pickle
+from sys import path
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from base64 import urlsafe_b64decode, urlsafe_b64encode
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
+from email.mime.audio import MIMEAudio
+from email.mime.base import MIMEBase
+from mimetypes import guess_type as guess_mime_type
+import json
+import os
+SCOPES = ['https://mail.google.com/']
+#our_email = usr_signup.info_out('email')
+os.chdir('pac')
+cwd=os.getcwd()
 
-try:
-    from pac import voice_io, usr_signup
-    
-except:
-    import voice_io, usr_signup
-
-def sendMail(sndr_mail,sndr_pw,rcpnt,msg_sub,msg_body):
-    with smtplib.SMTP('smtp.gmail.com',587) as smtp:
-        try:
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.ehlo()
-            smtp.login(sndr_mail, sndr_pw)
-            subject=msg_sub
-            body=msg_body
-            msg=f'Subject: {subject}\n\n{body}'
-            smtp.sendmail(sndr_mail,rcpnt,msg)
-            voice_io.show("Email Sent Successfully!")
-        except:
-            voice_io.show("Uh-oh! It looks like i ran into some trouble doing that, my best guess would be that, either your email credentials don't work, which if is the case then you can always go to the help section and to the user data one and update your email and/or password, or maybe you're just entering a wrong recepient's email, or, and this one is a big OR, \"Less Secure Apps\" is not turned on for your google account!\n")
-            y=input("Which if you want i can do it for you now, just enter 'YES' or 'OK' and a webpage will be prompted with an option to turn on \"Less Secure Apps\" for your google account and just by doing that, the program will be good to go! Otherwise enter 'NO' and you can always do it later. (If you've already have that turned on, please ignore this by entering 'NO' and check whether your problem is one of the other potential problems that i've mentioned) \n>>> ")
-            if y.lower()=="yes" or y.lower()=="ok" or y.lower()=="okay" or y.lower()=="":
-                voice_io.show("Great! Here you go!")
-                webbrowser.open("https://myaccount.google.com/lesssecureapps?")
-                return
-            elif y.lower()=="no" or y.lower()=="nope":
-                voice_io.show("Alright then later it is!")
-                return
-
-
-def mail_sender():
-    sender=usr_signup.info_out("email")
-    sender_pass=usr_signup.info_out("password")
-    recepient=input("Enter the recepient's email: ")
-    x=input("Will there be a subject in the email? ")
-    x_y=["yes","yep","yeas","yeah","yeap"]
-    if x.lower() in x_y:
-        voice_io.show("Alright, enter the subject of the email then!")
-        sub=input("Here: ")
-        voice_io.show("and the body!")
-        body=input("Here: ")  
-    else:
-        voice_io.show("Alright then, no subject it is, enter the body of the email though!")
-        sub=""
-        body=input("Here: ")
-    sendMail(sender,sender_pass,recepient,sub,body)
-
-#mail_sender()
-
-def feedback_sender():
-    sender=usr_signup.info_out("email")
-    sender_pass=usr_signup.info_out("password")
-    def pda_feedback(x,y):
-        sendMail(sender,sender_pass,["korihelpdesk@gmail.com","sagarprabhatkumar@gmail.com","sagarprabhatkumar13@gmail.com","duttashaan107@gmail.com","duttashaan102@gmail.com"],x,y)
-        #sendMail(sender,sender_pass,["sagarprabhatkumar@gmail.com","sagarprabhatkumar13@gmail.com"],x,y)
-        return
-    while True:
-        voice_io.show("\nWhat do you wanna feed-back? xD")
-        voice_io.show("1. Report a bug")
-        voice_io.show("2. Suggest Improvement")
-        voice_io.show("3. Get in touch with the developers")
-        voice_io.show("4. Something Else")
-        voice_io.show("5. Nothing (Exit)")
-        x=input("Enter Choice: ")
-        if x=="1":
-            subject="Kori Feedback - Bug Report"
-            body=input("Please specify the bug you've encountered: ")
-            try:
-                pda_feedback(subject,body)
-            except:
-                voice_io.show("Uh-oh! It looks like i ran into some trouble doing that, you mind doing it later?")
-                return
-        elif x=="2":
-            subject="Kori Feedback - Improvements Suggestion"
-            body=input("Please explain verbosely what improvement would you like to see in the future updates: ")
-            try:
-                pda_feedback(subject,body)
-            except:
-                voice_io.show("Uh-oh! It looks like i ran into some trouble doing that, you mind doing it later?")
-                return
-        elif x=="3":
-            subject="Kori Feedback - User Contact"
-            body=input("What would you want to say to my developers: ")
-            try:
-                pda_feedback(subject,body)
-            except:
-                voice_io.show("Uh-oh! It looks like i ran into some trouble doing that, you mind doing it later?")
-                return
-        elif x=="4":
-            subject="Kori Feedback - Feedback"
-            body=input("What would you like to say: ")
-            try:
-                pda_feedback(subject,body)
-            except:
-                voice_io.show("Uh-oh! It looks like i ran into some trouble doing that, you mind doing it later?")
-                return
-        elif x=="5":
-            voice_io.show("Alright, come back again when you have something to say!")
-            break
+def gmail_authenticate():
+    creds = None
+    if os.path.exists("token.pickle"):
+        with open("token.pickle", "rb") as token:
+            creds = pickle.load(token)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
         else:
-            voice_io.show("Invalid Input! Please try again!")
-            continue
-            
-#feedback_sender()
+            flow = InstalledAppFlow.from_client_secrets_file(f'{cwd}\gmail_creds.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+        with open("token.pickle", "wb") as token:
+            pickle.dump(creds, token)
+    return build('gmail', 'v1', credentials=creds)
+
+service = gmail_authenticate()
+
+def add_attachment(message, filename):
+    content_type, encoding = guess_mime_type(filename)
+    if content_type is None or encoding is not None:
+        content_type = 'application/octet-stream'
+    main_type, sub_type = content_type.split('/', 1)
+    if main_type == 'text':
+        fp = open(filename, 'rb')
+        msg = MIMEText(fp.read().decode(), _subtype=sub_type)
+        fp.close()
+    elif main_type == 'image':
+        fp = open(filename, 'rb')
+        msg = MIMEImage(fp.read(), _subtype=sub_type)
+        fp.close()
+    elif main_type == 'audio':
+        fp = open(filename, 'rb')
+        msg = MIMEAudio(fp.read(), _subtype=sub_type)
+        fp.close()
+    else:
+        fp = open(filename, 'rb')
+        msg = MIMEBase(main_type, sub_type)
+        msg.set_payload(fp.read())
+        fp.close()
+    filename = os.path.basename(filename)
+    msg.add_header('Content-Disposition', 'attachment', filename=filename)
+    message.attach(msg)
+
+def build_message(destination, obj, body, attachments=[]):
+    if not attachments:
+        message = MIMEText(body)
+        message['to'] = destination
+        message['from'] = usr_signup.info_out('email')
+        message['subject'] = obj
+    else:
+        message = MIMEMultipart()
+        message['to'] = destination
+        message['from'] = usr_signup.info_out('email')
+        message['subject'] = obj
+        message.attach(MIMEText(body))
+        for filename in attachments:
+            add_attachment(message, filename)
+    return {'raw': urlsafe_b64encode(message.as_bytes()).decode()}
+
+def send_message(service, obj, body, attachments=[], destinations=[]):
+    if len(destinations)==1:
+        return service.users().messages().send(
+        userId="me",
+        body=build_message(destinations[0], obj, body, attachments)
+        ).execute()
+    else:
+        for destination in destinations:
+            service.users().messages().send(
+            userId="me",
+            body=build_message(destination, obj, body, attachments)
+            ).execute()
+
+#send_message(service, "Hey there!", 
+#            "This email was sent to you by kori.", destinations=["optimusswine69@gmail.com"])
+
+def search_messages(service, query):
+    result = service.users().messages().list(userId='me',q=query).execute()
+    messages = [ ]
+    if 'messages' in result:
+        messages.extend(result['messages'])
+    while 'nextPageToken' in result:
+        page_token = result['nextPageToken']
+        result = service.users().messages().list(userId='me',q=query, pageToken=page_token).execute()
+        if 'messages' in result:
+            messages.extend(result['messages'])
+    return messages
+
+def list_messages(service):
+    result = service.users().messages().list(userId='me',maxResults=5, labelIds=["INBOX"]).execute()
+    messages = []
+    if 'messages' in result:
+        messages.extend(result['messages'])
+    return messages
+
+
+
+def get_size_format(b, factor=1024, suffix="B"):
+    """
+    Scale bytes to its proper byte format
+    e.g:
+        1253656 => '1.20MB'
+        1253656678 => '1.17GB'
+    """
+    for unit in ["", "K", "M", "G", "T", "P", "E", "Z"]:
+        if b < factor:
+            return f"{b:.2f}{unit}{suffix}"
+        b /= factor
+    return f"{b:.2f}Y{suffix}"
+
+
+def clean(text):
+    return "".join(c if c.isalnum() else "_" for c in text)
+
+def parse_parts(service, parts, folder_name, message):
+    """
+    Utility function that parses the content of an email partition
+    """
+    if parts:
+        for part in parts:
+            filename = part.get("filename")
+            mimeType = part.get("mimeType")
+            body = part.get("body")
+            data = body.get("data")
+            file_size = body.get("size")
+            part_headers = part.get("headers")
+            if part.get("parts"):
+                # recursively call this function when we see that a part
+                # has parts inside
+                parse_parts(service, part.get("parts"), folder_name, message)
+            if mimeType == "text/plain":
+                # if the email part is text plain
+                if data:
+                    text = urlsafe_b64decode(data).decode()
+                    print(text)
+            elif mimeType == "text/html":
+                if not filename:
+                    filename = "index.html"
+                filepath = os.path.join(folder_name, filename)
+                print("Saving HTML to", filepath)
+                with open(filepath, "wb") as f:
+                    f.write(urlsafe_b64decode(data))
+            else:
+                # attachment other than a plain text or HTML
+                for part_header in part_headers:
+                    part_header_name = part_header.get("name")
+                    part_header_value = part_header.get("value")
+                    if part_header_name == "Content-Disposition":
+                        if "attachment" in part_header_value:
+                            # we get the attachment ID 
+                            # and make another request to get the attachment itself
+                            print("Saving the file:", filename, "size:", get_size_format(file_size))
+                            attachment_id = body.get("attachmentId")
+                            attachment = service.users().messages() \
+                                        .attachments().get(id=attachment_id, userId='me', messageId=message['id']).execute()
+                            data = attachment.get("data")
+                            filepath = os.path.join(folder_name, filename)
+                            if data:
+                                with open(filepath, "wb") as f:
+                                    f.write(urlsafe_b64decode(data))
+
+
+def read_message(service, message):
+    msg = service.users().messages().get(userId='me', id=message['id'], format='full').execute()
+    payload = msg['payload']
+    headers = payload.get("headers")
+    parts = payload.get("parts")
+    cur_folder = os.getcwd()
+    folder_name = "email"
+    has_subject = False
+    if headers:
+        for header in headers:
+            name = header.get("name")
+            value = header.get("value")
+            if name.lower() == 'from':
+                print("From:", value)
+            if name.lower() == "to":
+                print("To:", value)
+            if name.lower() == "subject":
+                has_subject = True
+                folder_name = clean(value)
+                folder_counter = 0
+                while os.path.isdir(folder_name):
+                    folder_counter += 1
+                    # we have the same folder name, add a number next to it
+                    if folder_name[-1].isdigit() and folder_name[-2] == "_":
+                        folder_name = f"{folder_name[:-2]}_{folder_counter}"
+                    elif folder_name[-2:].isdigit() and folder_name[-3] == "_":
+                        folder_name = f"{folder_name[:-3]}_{folder_counter}"
+                    else:
+                        folder_name = f"{folder_name}_{folder_counter}"
+                os.chdir(cur_folder)
+                os.mkdir(folder_name)
+                print("Subject:", value)
+            if name.lower() == "date":
+                # we print the date when the message was sent
+                print("Date:", value)
+    if not has_subject:
+        # if the email does not have a subject, then make a folder with "email" name
+        # since folders are created based on subjects
+        if not os.isdir(folder_name):
+            os.chdir(cur_folder)
+            os.mkdir(folder_name)
+    parse_parts(service, parts, folder_name, message)
+    print("="*50)
+
+
+#results = list_messages(service)
+#for msg in results:
+#    read_message(service, msg)
+
+def mark_as_read(service, query):
+    messages_to_mark = search_messages(service, query)
+    return service.users().messages().batchModify(
+      userId='me',
+      body={
+          'ids': [ msg['id'] for msg in messages_to_mark ],
+          'removeLabelIds': ['UNREAD']
+      }
+    ).execute()
+
+
+#mark_as_read(service, "Google")
+
+def mark_as_unread(service, query):
+    messages_to_mark = search_messages(service, query)
+    # add the label UNREAD to each of the search results
+    return service.users().messages().batchModify(
+        userId='me',
+        body={
+            'ids': [ msg['id'] for msg in messages_to_mark ],
+            'addLabelIds': ['UNREAD']
+        }
+    ).execute()
+
+#mark_as_unread(service, "email@domain.com")
+
+def delete_messages(service, query):
+    messages_to_delete = search_messages(service, query)
+    # it's possible to delete a single message with the delete API, like this:
+    # service.users().messages().delete(userId='me', id=msg['id'])
+    # but it's also possible to delete all the selected messages with one query, batchDelete
+    return service.users().messages().batchDelete(
+      userId='me',
+      body={
+          'ids': [ msg['id'] for msg in messages_to_delete]
+      }
+    ).execute()
+
+#delete_messages(service, "Google Alerts")
+

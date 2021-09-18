@@ -67,9 +67,9 @@ except ModuleNotFoundError:
             date_time_op
             )
 
-except OSError:
-    print("\nPackage 'libespeak1'(debian based systems) or 'espeak'(fedora based systems), which is required by this program, is missing from your system!\nPlease install it from your distro repos and run this program again!")
-    exit()
+#except:
+#    print("\nPackage 'libespeak1'(debian based systems) or 'espeak'(fedora based systems), which is required by this program, is missing from your system!\nPlease install it from your distro repos and run this program again!")
+#    exit()
 
 import bcrypt
 from cryptography.fernet import Fernet
@@ -536,7 +536,7 @@ def main():
                 notes_reminders_op.reminder_write()
 
             elif result == "email":
-                mail_op.sendEmail()
+                mail_op.send_message(mail_op.service, "Hey there!", "This email was sent to you by kori.", destinations=["optimusswine69@gmail.com"]) #test
 
             elif result == "song":
                 task=task.lower()

@@ -1,7 +1,5 @@
 import pickle as pk
 import os
-#import voice_io
-#from get_dirs import FILE_ASSISTANT_SETTINGS
 from pac import voice_io
 from pac.get_dirs import FILE_ASSISTANT_SETTINGS
 """
@@ -53,14 +51,14 @@ Mandarin 67
 
 usr_ass_settings={'vc_gnd':'male','vc_vol':1.0,'vc_rate':'100','vc_lng':'english-us','vc_sound':False}
 
-
 def write():
-    f1=open(FILE_ASSISTANT_SETTINGS,"wb+")
-    pk.dump(usr_ass_settings,f1)
-    f1.close()
+    with open(FILE_ASSISTANT_SETTINGS,'wb+') as f1:
+        pk.dump(usr_ass_settings,f1)
+
 
 if not os.path.exists(FILE_ASSISTANT_SETTINGS):
     write()
+
 #write()
 
 def read():
