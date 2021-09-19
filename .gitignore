@@ -211,5 +211,5 @@ $RECYCLE.BIN/
 *.lnk
 
 # Our Files
-pac/gmail_creds.json
-pac/token.pickle
+#pac/gmail_creds.json
+#pac/token.pickle
