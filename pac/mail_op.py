@@ -1,6 +1,5 @@
 #pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib 
-import os
-from pac import usr_signup
+from pac import encryption
 import pickle
 from sys import path
 from googleapiclient.discovery import build
@@ -15,11 +14,16 @@ from email.mime.base import MIMEBase
 from mimetypes import guess_type as guess_mime_type
 import json
 import os
+from pathlib import Path
+cwd=Path(__file__).parent
+try:
+    from pac import usr_signup
+except:
+    import usr_signup
 SCOPES = ['https://mail.google.com/']
-#our_email = usr_signup.info_out('email')
-os.chdir('pac')
-cwd=os.getcwd()
-
+key=encryption.getkey()
+usr_email = usr_signup.main(operation = "fetch", data_type = "email",key=key)
+#print(usr_email)
 def gmail_authenticate():
     creds = None
     if os.path.exists("token.pickle"):
@@ -29,13 +33,20 @@ def gmail_authenticate():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(f'{cwd}\gmail_creds.json', SCOPES)
-            creds = flow.run_local_server(port=0)
+            print("Looks like you didn't authenticate my Email Services when signing up, would you like to do that now? You know I will be needing this to continue, right? Press: ")
+            ch=input("\n1. To authenticate it right now, like a good master! ^o^\n2. To skip and not be cool to me, like a bad master! U_U\n")
+            if ch=='1':
+                flow = InstalledAppFlow.from_client_secrets_file(f'{cwd}\gmail_creds.json', SCOPES)
+                creds = flow.run_local_server(port=0)
+            elif ch=='2':
+                return
+            else:
+                print("Invalid Input, Skipping!")
         with open("token.pickle", "wb") as token:
             pickle.dump(creds, token)
     return build('gmail', 'v1', credentials=creds)
 
-service = gmail_authenticate()
+#service = gmail_authenticate()
 
 def add_attachment(message, filename):
     content_type, encoding = guess_mime_type(filename)

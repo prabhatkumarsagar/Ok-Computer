@@ -22,7 +22,7 @@ PICTURES = HOME + f"{seq}Pictures"
 VIDEOS = HOME + f"{seq}Videos"
 
 #Assistant data directories
-PATH_USR_DATA = HOME + f"{seq}Documents{seq}Kori"
+PATH_USR_DATA = HOME + f"{seq}Documents{seq}Kori{seq}"
 FILE_ASSISTANT_SETTINGS = PATH_USR_DATA + f"{seq}assistant_settings.dat"
 FILE_SOUND_VALUE = PATH_USR_DATA + 'ass_sound_val.dat'
 FILE_USR_DATA = PATH_USR_DATA + 'user_info.dat'

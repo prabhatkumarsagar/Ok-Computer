@@ -2,23 +2,27 @@ import requests
 from pyowm.owm import OWM 
 from pyowm.utils import timestamps
 import geocoder
-
+import json
+import os
+os.chdir('pac')
+cwd=os.getcwd()
 try:
     from pac import voice_io
 
 except ModuleNotFoundError:
     import voice_io
-    
 
 g = geocoder.ip('me')
 ct=(g.city)
 
+with open(f"{cwd}\creds.json", "r") as f:
+     data = json.load(f)
+api=data['apis'][1]['owm']
 
 #weather
 def weather_curr():      
-    api_key = "cd140d1c1404cba5de2dabf6bcd00f52" 
     base_url = "http://api.openweathermap.org/data/2.5/weather?"
-    url = base_url + "&q=" + ct + "&appid=" + api_key
+    url = base_url + "&q=" + ct + "&appid=" + api
     response = requests.get(url)  
     x = response.json()  
     if x["cod"] == "404":  
@@ -35,7 +39,7 @@ def weather_curr():
 #weather forecaster
 def weather_forec():
     voice_io.show("Sorry i am currently restricted to show weather forecast for tomorrow only. \nLook out for future updates and see if my handcuffs are set free. Here's tomorrow's weather forecast anyway.")
-    owm = OWM('cd140d1c1404cba5de2dabf6bcd00f52')
+    owm = OWM(api)
     mgr=owm.weather_manager()
     loc = mgr.weather_at_place(ct)
     weather = loc.weather

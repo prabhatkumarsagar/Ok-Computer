@@ -1,13 +1,19 @@
-import re, wikipedia, wolframalpha, webbrowser
-
+import re, wikipedia, wolframalpha, webbrowser, json
+import os
+from pathlib import Path
+cwd=Path(__file__).parent
 try:
     from pac import voice_io
 
 except ModuleNotFoundError:
     import voice_io
-    
+
+with open(f"{cwd}\creds.json", "r") as f:
+     data = json.load(f)
+api=data['apis'][0]['wolframalpha']
+
 def wolfy(question):    
-    app_id = "AT3YLY-P2L67K557P"
+    app_id = api
     client = wolframalpha.Client(app_id) 
     res = client.query(question) 
     answer = next(res.results)["subpod"]["plaintext"]

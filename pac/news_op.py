@@ -3,15 +3,24 @@ import webbrowser
 from iso3166 import countries
 import time
 import geocoder
+import json
+import os
+from pathlib import Path
+cwd=Path(__file__).parent
+
 
 try:
-    from pac import (voice_io,invoice,clear)
+    from pac import voice_io,invoice,clear
 
 except ModuleNotFoundError:
     import voice_io,invoice,clear
 
 g = geocoder.ip('me')
 cnt=(g.country)
+
+with open(f"{cwd}\creds.json", "r") as f:
+     data = json.load(f)
+api=data['apis'][2]['newsapi']
 
 def cnt_iso3166(country):
     c=countries.get(country)
@@ -24,7 +33,7 @@ def headlines(cnt=cnt_code,catg='general'):
     url = ('https://newsapi.org/v2/top-headlines?'
         f'country={cnt}&'
         f'category={catg}&'
-        'apiKey=e77def287de74a8093ae15e0d9205e6a')
+        f'apiKey={api}')
     #voice_io.show(url)
     response = requests.get(url)
     r=response.json()
@@ -163,7 +172,7 @@ Alternatively you can use the AND / OR / NOT keywords, and optionally group thes
     for i in params.keys():
         s=f'{i}={params[i]}&'
         url+=s
-    url+="apiKey=e77def287de74a8093ae15e0d9205e6a"
+    url+=f"apiKey={api}"
     voice_io.show(url)
     response = requests.get(url)
     r=response.json()

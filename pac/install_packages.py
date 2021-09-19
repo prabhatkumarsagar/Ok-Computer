@@ -22,7 +22,8 @@ def install(packages = {}):
             "lxml": "pip3 install lxml",
             "tabulate": "pip3 install tabulate",
             "plyer": "pip3 install plyer",
-            "bcrypt": "pip3 install bcrypt"
+            "bcrypt": "pip3 install bcrypt",
+            "gmail": "pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib"
         }
     else:
         commands = packages

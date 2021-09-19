@@ -6,7 +6,7 @@ import random
 import getpass
 import re
 import base64
-from pac import install_packages as ip, notes_reminders_op
+from pac import encryption, install_packages as ip, notes_reminders_op
 from pac import get_dirs
 from pac import clear
 
@@ -67,9 +67,9 @@ except ModuleNotFoundError:
             date_time_op
             )
 
-#except:
-#    print("\nPackage 'libespeak1'(debian based systems) or 'espeak'(fedora based systems), which is required by this program, is missing from your system!\nPlease install it from your distro repos and run this program again!")
-#    exit()
+except OSError:
+    print("\nPackage 'libespeak1'(debian based systems) or 'espeak'(fedora based systems), which is required by this program, is missing from your system!\nPlease install it from your distro repos and run this program again!")
+    exit()
 
 import bcrypt
 from cryptography.fernet import Fernet
@@ -134,7 +134,8 @@ def operation(query):
         "weather": ["weather","weather today","what's the weather","current weather","what's the temperature outside","how's the josh","temperature"], 
         "weather_frcst": ["weather forecast","weather tomorrow", "what's the weather forecast","how's the weather going to be"], 
         "song": ["play","song"], 
-        "news": ["news","headlines","top headlines","today's news"]
+        "news": ["news","headlines","top headlines","today's news"],
+        "test":["test"] #for testing out a feature or module or function or whatever
     }
     n=""
     for i in op:
@@ -149,16 +150,8 @@ key = None
 
 def fetch_password():
     pswd = bytes(getpass.getpass(voice_io.show("\nPlease enter your password. ",show_output = False) + "\nPassword: "), encoding = "utf-8")#use password
-    salt = b'$2b$12$3hbla5Xs2Ekx9SGVYfWQuO'
-    hashed_pswd = bcrypt.hashpw(pswd, salt)
-    kdf = PBKDF2HMAC(
-                        algorithm=hashes.SHA256(),
-                        length=32,
-                        salt=salt,
-                        iterations=100000,
-                    )
     global key
-    key = base64.urlsafe_b64encode(kdf.derive(hashed_pswd))
+    key=encryption.getkey()
     global usr_name
     usr_name = False
     usr_name = usr_signup.main(operation = "fetch", data_type = "name", key = key)
@@ -221,6 +214,10 @@ def main():
                 else:
                     voice_io.show("Invalid Input! Please Try Again!")
             
+            #for testing out a feature or module or function or whatever
+            elif result=="test":
+                pass
+
             elif result=="delete_file_unspecified":
                 deleteFileUnspecified()
 
@@ -640,8 +637,8 @@ Now then, Please Press Enter/Return to continue.
     
     if not os.path.exists(get_dirs.PATH_USR_DATA):
         os.mkdir(get_dirs.PATH_USR_DATA)
-    global key, usr_name
-    key, usr_name = usr_signup.main(operation = "new")
+    global usr_name
+    usr_name = usr_signup.main(operation = "new")
 
 def deleteFileUnspecified():
     search_dir = ""
@@ -891,7 +888,7 @@ def gnd():
         return gndmm[random.randint(0,2)]
 
 def gnd_hello(): 
-    voice_io.show("Hello ", gnd(), usr_name)
+    voice_io.show("Hello", gnd(), usr_name)
 
 def gnd_ns():# greeting on a new session
     voice_io.show(f"""Hello {gnd()} {usr_name}! 

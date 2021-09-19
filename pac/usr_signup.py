@@ -1,4 +1,5 @@
 import pickle as pk
+import time
 import os
 import getpass
 from platform import processor
@@ -11,12 +12,17 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from pathlib import Path
+cwd=Path(__file__).parent
 
-from pac import (get_dirs, clear, voice_io, invoice, mail_op)
-#os.chdir('pac')
-cwd=os.getcwd()
+try:
+    from pac import get_dirs, clear, voice_io, invoice
+except:
+    import get_dirs,clear,voice_io,invoice
+
 SCOPES = ['https://mail.google.com/']
-def gmail_authenticate():
+
+def gmail_authentication():
     creds = None
     if os.path.exists("token.pickle"):
         with open("token.pickle", "rb") as token:
@@ -29,8 +35,6 @@ def gmail_authenticate():
             creds = flow.run_local_server(port=0)
         with open("token.pickle", "wb") as token:
             pk.dump(creds, token)
-    if __name__!="__main__":
-       return build('gmail', 'v1', credentials=creds)
 
 key = ""
 def setNewUser():
@@ -38,9 +42,9 @@ def setNewUser():
     clear.clear()
     voice_io.show("What shall I call you Master? ")
     nm = bytes(invoice.inpt(), encoding = "utf-8") #Name of the user i.e the name by which the assistant will call him/her
-    voice_io.show("\nAnd you are, Master or Miss, master? ") #Gender of the user which the assistant will refer to again and again
+    voice_io.show("\nAnd you are, Master or Miss, master? ") #Gender of the user
     gnd = invoice.inpt()
-    asst_pswd = bytes(getpass.getpass(voice_io.show("\nWhat should be your password for accessing me?",show_output = False) + "\nPassword: "), encoding = "utf-8")#
+    asst_pswd = bytes(getpass.getpass(voice_io.show("\nWhat should be your password for accessing me?",show_output = False) + "\nPassword: "), encoding = "utf-8")
     salt = b'$2b$12$3hbla5Xs2Ekx9SGVYfWQuO'
     hashed_pswd = bcrypt.hashpw(asst_pswd, salt)
     kdf = PBKDF2HMAC(
@@ -51,10 +55,18 @@ def setNewUser():
                     )
     global key
     key = base64.urlsafe_b64encode(kdf.derive(hashed_pswd))
-    voice_io.show("\nAnd lastly what would be your 'gmail' address? Note: Right now, I support gmail (google) accounts only, so please make one if you don't have one already, to continue! ")
+    with open(get_dirs.FILE_ENCRYPT_KEY,'wb+') as f:
+        f.write(key)
+    voice_io.show("\nAnd now what would be your 'gmail' address? Note: Right now I support gmail (google) accounts only, so please make one if you don't have one already, to continue! ")
     eml = bytes(invoice.inpt(processed= False), encoding = "utf-8")
-    print("Alright now let us authenticate that with Daddy Google!")
-    gmail_authenticate()
+    print("\nLastly I need you to authenticate this with Daddy Google for me, you can skip this now but know that I will be needing this to perform Email Operations! Press: ")
+    ch=input("\n1. To authenticate it right now, like a good master! ^o^\n2. To skip and not be cool to me, like a bad master! U_U\n")
+    if ch=='1':
+        gmail_authentication()
+    elif ch=='2':
+        pass
+    else:
+        print("Invalid Input, Skipping!")
     cipher_suite = Fernet(key)
     usr_info_dic['name']=cipher_suite.encrypt(nm)
     GND_FEMALE=["girl",'miss','missus','mrs','female','lady','woman']
@@ -63,14 +75,14 @@ def setNewUser():
         usr_info_dic['gender']=cipher_suite.encrypt(b"Female")
     elif gnd.lower() in GND_MALE:
         usr_info_dic['gender']=cipher_suite.encrypt(b"Male")
-    else:   
+    else:
         usr_info_dic['gender']=cipher_suite.encrypt(b"Others")
     usr_info_dic["asst_password"] = cipher_suite.encrypt(hashed_pswd)
     usr_info_dic['email']=cipher_suite.encrypt(eml)
     info_in(usr_info_dic)
-    voice_io.show("Well then now you're good to go! Just press Enter/Return to get going!", end = "")
+    voice_io.show("Well then you're good to go! Just press Enter/Return to continue!", end = "")
     invoice.inpt("", iterate = False)
-    return key, nm.decode("utf-8")
+    return nm.decode("utf-8")
 
 def info_in(x):
     f2=open(get_dirs.FILE_USR_DATA,'wb+')
@@ -78,7 +90,7 @@ def info_in(x):
     f2.close()
 
 
-def info_out(key=key, x="all"):
+def info_out(key, x="all"):
     f=open(get_dirs.FILE_USR_DATA,'rb+')
     cipher_suite = Fernet(key)
     rd=pk.load(f)
