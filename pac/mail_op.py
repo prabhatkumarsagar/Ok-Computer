@@ -1,4 +1,4 @@
-#pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib 
+from re import A
 from pac import encryption
 import pickle
 from sys import path
@@ -11,8 +11,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
-from mimetypes import guess_type as guess_mime_type
-import json
+from mimetypes import MimeTypes, guess_type as guess_mime_type
 import os
 from pathlib import Path
 cwd=Path(__file__).parent
@@ -23,7 +22,7 @@ except:
 SCOPES = ['https://mail.google.com/']
 key=encryption.getkey()
 usr_email = usr_signup.main(operation = "fetch", data_type = "email",key=key)
-#print(usr_email)
+
 def gmail_authenticate():
     creds = None
     if os.path.exists("token.pickle"):
@@ -46,65 +45,197 @@ def gmail_authenticate():
             pickle.dump(creds, token)
     return build('gmail', 'v1', credentials=creds)
 
-#service = gmail_authenticate()
 
-def add_attachment(message, filename):
-    content_type, encoding = guess_mime_type(filename)
-    if content_type is None or encoding is not None:
-        content_type = 'application/octet-stream'
-    main_type, sub_type = content_type.split('/', 1)
-    if main_type == 'text':
-        fp = open(filename, 'rb')
-        msg = MIMEText(fp.read().decode(), _subtype=sub_type)
-        fp.close()
-    elif main_type == 'image':
-        fp = open(filename, 'rb')
-        msg = MIMEImage(fp.read(), _subtype=sub_type)
-        fp.close()
-    elif main_type == 'audio':
-        fp = open(filename, 'rb')
-        msg = MIMEAudio(fp.read(), _subtype=sub_type)
-        fp.close()
-    else:
-        fp = open(filename, 'rb')
-        msg = MIMEBase(main_type, sub_type)
-        msg.set_payload(fp.read())
-        fp.close()
-    filename = os.path.basename(filename)
-    msg.add_header('Content-Disposition', 'attachment', filename=filename)
-    message.attach(msg)
+def send(type='email'):
+    service=gmail_authenticate()
+    def atchmnt(message, filename):
+        content_type, encoding = guess_mime_type(filename)
+        if content_type is None or encoding is not None:
+            content_type = 'application/octet-stream'
+        main_type, sub_type = content_type.split('/', 1)
+        if main_type == 'text':
+            fp = open(filename, 'rb')
+            msg = MIMEText(fp.read().decode(), _subtype=sub_type)
+            fp.close()
+        elif main_type == 'image':
+            fp = open(filename, 'rb')
+            msg = MIMEImage(fp.read(), _subtype=sub_type)
+            fp.close()
+        elif main_type == 'audio':
+            fp = open(filename, 'rb')
+            msg = MIMEAudio(fp.read(), _subtype=sub_type)
+            fp.close()
+        else:
+            fp = open(filename, 'rb')
+            msg = MIMEBase(main_type, sub_type)
+            msg.set_payload(fp.read())
+            fp.close()
+        filename = os.path.basename(filename)
+        msg.add_header('Content-Disposition', 'attachment', filename=filename)
+        message.attach(msg)
 
-def build_message(destination, obj, body, attachments=[]):
-    if not attachments:
-        message = MIMEText(body)
-        message['to'] = destination
-        message['from'] = usr_signup.info_out('email')
-        message['subject'] = obj
-    else:
-        message = MIMEMultipart()
-        message['to'] = destination
-        message['from'] = usr_signup.info_out('email')
-        message['subject'] = obj
-        message.attach(MIMEText(body))
-        for filename in attachments:
-            add_attachment(message, filename)
-    return {'raw': urlsafe_b64encode(message.as_bytes()).decode()}
+    def message(destination, obj, body, attachments=[]):
+        if not attachments:
+            message = MIMEText(body)
+            message['to'] = destination
+            message['from'] = usr_email
+            message['subject'] = obj
+        else:
+            message = MIMEMultipart()
+            message['to'] = destination
+            message['from'] = usr_email
+            message['subject'] = obj
+            message.attach(MIMEText(body))
+            for filename in attachments:
+                atchmnt(message, filename)
+        return {'raw': urlsafe_b64encode(message.as_bytes()).decode()}
 
-def send_message(service, obj, body, attachments=[], destinations=[]):
-    if len(destinations)==1:
-        return service.users().messages().send(
-        userId="me",
-        body=build_message(destinations[0], obj, body, attachments)
-        ).execute()
-    else:
-        for destination in destinations:
-            service.users().messages().send(
-            userId="me",
-            body=build_message(destination, obj, body, attachments)
-            ).execute()
+    def email(sub,body,destinations=[],attachment=[]):
+        try:
+            if len(destinations)==1:
+                service.users().messages().send(
+                userId="me",
+                body=message(destinations[0], sub, body, attachment)
+                ).execute()
+                print("\nThe Email was sent successfully!")
+            else:
+                for destination in destinations:
+                    service.users().messages().send(
+                    userId="me",
+                    body=message(destination, sub, body, attachment)
+                    ).execute()
+                print("\nThe Emails were sent successfully!")
 
-#send_message(service, "Hey there!", 
-#            "This email was sent to you by kori.", destinations=["optimusswine69@gmail.com"])
+        except Exception as e:
+            print("Uh-oh! Looks like I ran into some errors doing that, why don't you try that again later and incase the problem persists report it to the developers.")
+            print('\nError Message: ', e)
+
+    def atchcheck():
+        x=input("\nDo you want to add any attachment(s) to the email or not?\n")
+        x_y=["yes","yep","ok","yeah","yeap"]
+        if x.lower() in x_y:
+            return True
+        else:
+            return False
+
+    if type.lower()=='email':
+        destinations=input("\nWho do you want to send the email to? (for more than one recipients separate by commas like - 'rec1@mail.com,rec2@mail.com,...') \n")
+        destinations=destinations.split(sep=',')
+        print("\nNow enter the subject of the email!")
+        sub=input("Here: ")
+        print("\nand the body!")
+        body=input("Here: ")  
+        if atchcheck():
+            atch=[]
+            while True:
+                atch1=input("\nEnter the file name with the full path: \n")
+                atch.append(atch1)
+                ch=input("\nDo you want to add any more attachment(s)? \n1. Yes \n2. No\n")
+                if ch=='1':
+                    continue
+                else:
+                    break
+            email(sub,body,destinations=destinations,attachment=atch)
+
+        else:
+            email(sub,body,destinations=destinations)
+
+    if type.lower()=='feedback':
+        destinations=['korihelpdesk@gmail.com','duttashaan102@gmail.com','sagarprabhatkumar9733@gmail.com']
+        def feedback(sub,body,destinations=destinations,attachment=[]):
+            try:
+                for destination in destinations:
+                    service.users().messages().send(
+                    userId="me",
+                    body=message(destination,sub,body,attachment)
+                    ).execute()
+                print("\nThe Feedback was sent successfully!")
+            except Exception as e:
+                print("Uh-oh! Looks like I ran into some errors doing that, why don't you try that again later and incase the problem persists report it to the developers.")
+                print('\nError Message: ', e)
+        
+        print("\nHere's what you can do: ")
+        print("1. Report a bug")
+        print("2. Suggest improvement(s)")
+        print("3. Get in touch with the developers")
+        print("4. Something else")
+        print("5. Nothing (Exit)\n")
+        x=input("Enter Choice: ")
+        if x=="1":
+            sub="Kori User Feedback - Bug Report"
+            body=input("Please specify the bug you've encountered: ")
+            if atchcheck():
+                atch=[]
+                while True:
+                    atch1=input("\nEnter the file name with the full path: \n")
+                    atch.append(atch1)
+                    ch=input("\nDo you want to add any more attachment(s)? \n1. Yes \n2. No\n")
+                    if ch=='1':
+                        continue
+                    else:
+                        break
+                feedback(sub,body,atch)
+            else:
+                feedback(sub,body)
+
+        elif x=="2":
+            sub="Kori User Feedback - Suggestions"
+            body=input("Please explain what improvement would you like to see in the future updates: ")
+            if atchcheck():
+                atch=[]
+                while True:
+                    atch1=input("\nEnter the file name with the full path: \n")
+                    atch.append(atch1)
+                    ch=input("\nDo you want to add any more attachment(s)? \n1. Yes \n2. No\n")
+                    if ch=='1':
+                        continue
+                    else:
+                        break
+                feedback(sub,body,atch)
+            else:
+                feedback(sub,body)
+
+        elif x=="3":
+            sub="Kori User Feedback - Contact"
+            body=input("What do you want to say to my developers: ")
+            if atchcheck():
+                atch=[]
+                while True:
+                    atch1=input("\nEnter the file name with the full path: \n")
+                    atch.append(atch1)
+                    ch=input("\nDo you want to add any more attachment(s)? \n1. Yes \n2. No\n")
+                    if ch=='1':
+                        continue
+                    else:
+                        break
+                feedback(sub,body,atch)
+            else:
+                feedback(sub,body)
+
+        elif x=="4":
+            sub="Kori User Feedback - Misc."
+            body=input("What would you like to say: ")
+            if atchcheck():
+                atch=[]
+                while True:
+                    atch1=input("\nEnter the file name with the full path: \n")
+                    atch.append(atch1)
+                    ch=input("\nDo you want to add any more attachment(s)? \n1. Yes \n2. No\n")
+                    if ch=='1':
+                        continue
+                    else:
+                        break
+                feedback(sub,body,atch)
+            else:
+                feedback(sub,body)
+
+        elif x=="5":
+            print("Alright, come back again when you have something to say!")
+        else:
+            print("Invalid Input! Please try again!")
+
+#------------------------------------------------------------------------------------------------------------
+
 
 def search_messages(service, query):
     result = service.users().messages().list(userId='me',q=query).execute()

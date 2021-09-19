@@ -216,7 +216,7 @@ def main():
             
             #for testing out a feature or module or function or whatever
             elif result=="test":
-                pass
+                mail_op.send()
 
             elif result=="delete_file_unspecified":
                 deleteFileUnspecified()
