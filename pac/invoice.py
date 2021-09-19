@@ -1,12 +1,14 @@
 #from pac.get_dirs import FILE_USR_DATA
-from pac import assistant_settings
 from pac.get_dirs import FILE_USR_DATA
 import os
 from pac import get_dirs
 from pac import clear
 #import get_dirs
 #import clear
-from pac import assistant_settings
+try:
+    from pac import assistant_settings
+except:
+    pass
 
 def inpt(text = ">>> ", audio_io = True, iterate = True, processed = True):
     if audio_io:

@@ -4,7 +4,12 @@ import gtts
 from playsound import playsound
 import pyttsx3
 import speech_recognition as sr
-from pac import get_dirs
+
+try:
+    from pac import get_dirs
+    
+except ModuleNotFoundError:
+    import get_dirs
 
 def is_connected():
     try:
