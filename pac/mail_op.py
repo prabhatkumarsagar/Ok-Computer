@@ -34,6 +34,7 @@ else:
     os.mkdir(mail_path)
 """
 
+
 class mail:
     def __init__(self):
         self.mkdir=True
@@ -269,6 +270,7 @@ class mail:
 
             elif x=="5":
                 print("Alright, come back again when you have something to say!")
+
             else:
                 print("Invalid Input! Please try again!")
 
@@ -295,11 +297,6 @@ class mail:
             messages = []
             if 'messages' in result:
                 messages.extend(result['messages'])
-            #while 'nextPageToken' in result:
-            #    page_token = result['nextPageToken']
-            #    result = service.users().messages().list(userId='me',maxResults=max,q=query, pageToken=page_token).execute()
-            #    if 'messages' in result:
-            #        messages.extend(result['messages'])
             return messages
 
         def get_size_format(b, factor=1024, suffix="B"):
@@ -332,7 +329,6 @@ class mail:
                             print("Date:",main['date'])
                             print("Subject:",main['sub'])
                             print(text)
-
 
                     elif mimeType == "text/html":
                         print("-"*50)
@@ -423,21 +419,20 @@ class mail:
 
         
 
-        print("\Here are the 10 latest emails from your Inbox: (Note this is the default email reading schema, if you wish to read specific emails with advanced search options you can do that by going to the main email screen by typing 'email' in the Kori console and choosing the 3rd option there or, by simpy typing 'advanced email'/'seach email') ")
+        print("\Here are the 10 latest emails from your Inbox: (Note this is the default email reading schema, if you wish to read specific emails with advanced search options you can do that by going to the main email screen by typing 'email' in the Kori console and choosing the 3rd option there or, by simpy typing 'advanced email' or 'search email') ")
         time.sleep(3)
         mails=list_messages()
         for mail in mails:
             read_messages(mail)
 
     def qry_parser():
-        q={}
         print("""
-This is the search query format
+This is the search query format/parameters:
 
-Specify the sender -
+To specify the sender -
 from:               Example: from:david@gmail.com
 
-Specify a recipient	-
+To specify a recipient	-
 to:                 Example: to:amy@gmail.com
 
 Words in the subject line -
@@ -472,27 +467,39 @@ after:              Example: after:2004/04/16
 before:             Example: before:04/18/2004
 
 Search for messages older or newer than a time period using d (day), m (month), and y (year) -
-older_than:         Example: newer_than:2d
-newer_than:         
+older_than:         Example: older_than:1m
+newer_than:         Example: newer_than:2d
 
 Search by email for delivered messages -
 deliveredto:        Example: deliveredto:username@gmail.com
 
-Messages in a certain category -
-category:primary    Example: category:updates
-category:social
-category:promotions
-category:updates
-category:forums
-category:reservations
-category:purchases
+Messages in a certain category (primary,social,promotions,updates,forums,reservations,purchases) -
+category:           Example: category:updates
 
 Results that match a word exactly -
 +                   Example: +unicorn
 
-        
+No of results -
+NR:                 Example: NR:25
 """)
-
+    q=[]
+    while True:
+        param=input("Enter search query using the above format: ")
+        try:
+            params=param.split(':')
+            q.append((params[0],params[1]))
+        except:
+            print("Looks like the query is not proper'y")
+        q.append(param)
+        c=input("\nPress:\n1. To add another query\n2. To continue\n")
+        if c=='1':
+            continue
+        elif c=='2':
+            qry=""
+            for i in q:
+                if 
+        else:
+            print("Invalid Input!")
 
     def search_param(self,query):
         print("Here are your search parameters: ")

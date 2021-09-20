@@ -55,8 +55,8 @@ def setNewUser():
                     )
     global key
     key = base64.urlsafe_b64encode(kdf.derive(hashed_pswd))
-    with open(get_dirs.FILE_ENCRYPT_KEY,'wb+') as f:
-        f.write(key)
+    #with open(get_dirs.FILE_ENCRYPT_KEY,'wb+') as f:
+    #    f.write(key)
     voice_io.show("\nAnd now what would be your 'gmail' address? Note: Right now I support gmail (google) accounts only, so please make one if you don't have one already, to continue! ")
     eml = bytes(invoice.inpt(processed= False), encoding = "utf-8")
     print("\nLastly I need you to authenticate this with Daddy Google for me, you can skip this now but know that I will be needing this to perform Email Operations! Press: ")
@@ -82,7 +82,7 @@ def setNewUser():
     info_in(usr_info_dic)
     voice_io.show("Well then you're good to go! Just press Enter/Return to continue!", end = "")
     invoice.inpt("", iterate = False)
-    return nm.decode("utf-8")
+    return key, nm.decode("utf-8")
 
 def info_in(x):
     f2=open(get_dirs.FILE_USR_DATA,'wb+')
