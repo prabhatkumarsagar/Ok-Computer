@@ -67,9 +67,9 @@ except ModuleNotFoundError:
             date_time_op
             )
 
-except OSError:
-    print("\nPackage 'libespeak1'(debian based systems) or 'espeak'(fedora based systems), which is required by this program, is missing from your system!\nPlease install it from your distro repos and run this program again!")
-    exit()
+#except OSError:
+#    print("\nPackage 'libespeak1'(debian based systems) or 'espeak'(fedora based systems), which is required by this program, is missing from your system!\nPlease install it from your distro repos and run this program again!")
+#    exit()
 
 import bcrypt
 from cryptography.fernet import Fernet
@@ -216,7 +216,7 @@ def main():
             
             #for testing out a feature or module or function or whatever
             elif result=="test":
-                mail_op.read()
+                mail_op.x.read()
 
             elif result=="delete_file_unspecified":
                 deleteFileUnspecified()

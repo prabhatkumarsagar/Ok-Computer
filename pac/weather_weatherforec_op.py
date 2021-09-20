@@ -4,8 +4,9 @@ from pyowm.utils import timestamps
 import geocoder
 import json
 import os
-os.chdir('pac')
-cwd=os.getcwd()
+from pathlib import Path
+#os.chdir('pac')
+cwd=Path(__file__).parent
 try:
     from pac import voice_io
 
