@@ -36,12 +36,12 @@ else:
 
 
 class mail:
-    def __init__(self):
+    def __init__(self,key):
         self.mkdir=True
         self.FT=True
         self.cwd=Path(__file__).parent
         self.SCOPES = ['https://mail.google.com/']
-        self.key=encryption.getkey()
+        self.key=key
         self.usr_email = usr_signup.main(operation = "fetch", data_type = "email",key=self.key)
         self.mail_path=get_dirs.PATH_EMAIL
         if not os.path.exists(self.mail_path):
@@ -424,9 +424,9 @@ class mail:
         mails=list_messages()
         for mail in mails:
             read_messages(mail)
-
+"""
     def qry_parser():
-        print("""
+        print(#
 This is the search query format/parameters:
 
 To specify the sender -
@@ -481,7 +481,7 @@ Results that match a word exactly -
 
 No of results -
 NR:                 Example: NR:25
-""")
+#)
     q=[]
     while True:
         param=input("Enter search query using the above format: ")
@@ -496,8 +496,8 @@ NR:                 Example: NR:25
             continue
         elif c=='2':
             qry=""
-            for i in q:
-                if 
+            #for i in q:
+             #   if 
         else:
             print("Invalid Input!")
 
@@ -536,29 +536,29 @@ NR:                 Example: NR:25
             'ids': [ msg['id'] for msg in messages_to_delete]
         }
         ).execute()
-
-def main():
-    x=mail()
+"""
+def main(key):
+    x=mail(key)
     mes='?'
     while True:
-        x=input(f"Hi! What do you want me to do{mes} Press: \n1. To send out email(s) \n2. To read out the latest email(s) from your Inbox \n3. To search for specific email(s) and read them \n4. To mark as read/unread email(s) \n5. To delete email(s) \n6. To send feedback \n7. To clear local email repository \n8. To go back.\n")
+        y=input(f"Hi! What do you want me to do{mes} Press: \n1. To send out email(s) \n2. To read out the latest email(s) from your Inbox \n3. To search for specific email(s) and read them \n4. To mark as read/unread email(s) \n5. To delete email(s) \n6. To send feedback \n7. To clear local email repository \n8. To go back.\n")
         mes=' now?'
-        if x=='1':
+        if y=='1':
             clear.clear()
             x.send()
-        elif x=='2':
+        elif y=='2':
             clear.clear()
             x.read()
-        elif x=='3':
+        elif y=='3':
             pass
-        elif x=='4':
+        elif y=='4':
             pass
-        elif x=='5':
+        elif y=='5':
             pass
-        elif x=='6':
+        elif y=='6':
             clear.clear()
             x.send('feedback')
-        elif x=='7':
+        elif y=='7':
             return
         else:
             print("Invalid Input!")

@@ -224,7 +224,7 @@ def main():
             
             #for testing out a feature or module or function or whatever
             elif result=="test":
-                mail_op.x.read()
+                mail_op.main(key=key)
 
             elif result=="delete_file_unspecified":
                 deleteFileUnspecified()

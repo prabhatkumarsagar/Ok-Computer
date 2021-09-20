@@ -23,6 +23,7 @@ except:
 SCOPES = ['https://mail.google.com/']
 
 def gmail_authentication():
+    os.chdir(cwd)
     creds = None
     if os.path.exists("token.pickle"):
         with open("token.pickle", "rb") as token:
