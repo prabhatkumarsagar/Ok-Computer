@@ -46,10 +46,6 @@ class mail:
         self.mail_path=get_dirs.PATH_EMAIL
         if not os.path.exists(self.mail_path):
             os.mkdir(self.mail_path)
-        else:
-            shutil.rmtree(self.mail_path)
-            os.mkdir(self.mail_path)
-
 
     def gmail_authenticate(self):
         creds = None
@@ -289,9 +285,9 @@ class mail:
                 print("\nInvalid Input! Turning it off! If you wanna keep it on, you can do that from Kori Settings.")
         self.FT=False
 
-        def list_messages(lblId=['INBOX'], query='', max=10):
+        def list_messages(lblId=['INBOX'], query='', max=25):
             if query!='':
-                result = service.users().messages().list(userId='me',maxResults=max, q=query, labelIds=lblId).execute()
+                result = service.users().messages().list(userId='me',maxResults=max, q=query).execute()
             else:
                 result = service.users().messages().list(userId='me',maxResults=max, labelIds=lblId).execute()
             messages = []
@@ -417,16 +413,15 @@ class mail:
             #input("Press Enter/Return to continue.")
             #clear.clear()
 
-        
-
         print("\Here are the 10 latest emails from your Inbox: (Note this is the default email reading schema, if you wish to read specific emails with advanced search options you can do that by going to the main email screen by typing 'email' in the Kori console and choosing the 3rd option there or, by simpy typing 'advanced email' or 'search email') ")
         time.sleep(3)
         mails=list_messages()
-        for mail in mails:
+        for mail in mails[0:10]:
             read_messages(mail)
-"""
-    def qry_parser():
-        print(#
+
+
+    def qry_parser(self):
+        print("""
 This is the search query format/parameters:
 
 To specify the sender -
@@ -438,11 +433,8 @@ to:                 Example: to:amy@gmail.com
 Words in the subject line -
 subject:            Example: subject:cs project
 
-Messages that match multiple terms -	
-OR                  Example: from:amy OR from:david
-
 Remove messages from your results -
--                   Example: dinner -movie
+remove:             Example: remove:movie
 
 Messages that have a certain label -	
 label:              Example: label:friends
@@ -450,13 +442,7 @@ label:              Example: label:friends
 Messages that have an attachment -	
 has:attachment      Example: has:attachment
 
-Search for an exact word or phrase -
-" "                 Example: "dinner and movie tonight"
-
-Group multiple search terms together -
-( )                 Example: subject:(dinner movie)
-
-Messages in any folder, including Spam and Trash -
+Messages in folder, inbox, anywhere, spam and trash -
 in:                 Example: in:anywhere 
 
 Search for messages that are marked as important, starred, snoozed, unread, or read messages -
@@ -470,78 +456,114 @@ Search for messages older or newer than a time period using d (day), m (month), 
 older_than:         Example: older_than:1m
 newer_than:         Example: newer_than:2d
 
-Search by email for delivered messages -
-deliveredto:        Example: deliveredto:username@gmail.com
-
 Messages in a certain category (primary,social,promotions,updates,forums,reservations,purchases) -
 category:           Example: category:updates
 
-Results that match a word exactly -
-+                   Example: +unicorn
+Results that match a word or phrase exactly -
+match_word:         Example: word:unicorn
+match_phrase:       Example: match_phrase:"dinner and movie night"
+""") 
+        q=[]
+        qry=""
+        while True:
+            param=input("\nEnter search query using the above format: ")
+            try:
+                params=param.split(':')
+                q.append((params[0],params[1]))
+            except:
+                print("The entered query in Invalid! Please try again!")
+                continue
+            c=input("\nPress:\n1. To add another query\n2. To continue\n")
+            if c=='1':
+                continue
+            elif c=='2':
+                for i in q:
+                    x,y = i
+                    if x=='match_word':
+                        qry+=f'+{y} '
+                    elif x=='match_phrase':
+                        if y[0]!="\"" and y[-1]!="\"":
+                            y=f"\"{y}\""
+                        qry+=f'{y} '
+                    elif x=='remove':
+                        qry+=f'-{y} '
+                    else:
+                        qry+=f'{x}:{y} '
+                qry=qry.rsplit()
+                break
+            else:
+                print("Invalid Input! Please try again!")
+                continue
+        return qry
 
-No of results -
-NR:                 Example: NR:25
-#)
-    q=[]
-    while True:
-        param=input("Enter search query using the above format: ")
-        try:
-            params=param.split(':')
-            q.append((params[0],params[1]))
-        except:
-            print("Looks like the query is not proper'y")
-        q.append(param)
-        c=input("\nPress:\n1. To add another query\n2. To continue\n")
-        if c=='1':
-            continue
-        elif c=='2':
-            qry=""
-            #for i in q:
-             #   if 
-        else:
-            print("Invalid Input!")
-
-    def search_param(self,query):
-        print("Here are your search parameters: ")
+    def search(self):
+        query=self.qry_parser()
+        results=self.read().list_messages(query=query)
+        for result in results:
+            self.read.read_messages(result)
+        
         
 
-    def mark_as_read(self):
-        messages_to_mark = self.read().search_messages(self.qry_parser)
-        return self.service.users().messages().batchModify(
-        userId='me',
-        body={
-            'ids': [ msg['id'] for msg in messages_to_mark ],
-            'removeLabelIds': ['UNREAD']
-        }
-        ).execute()
-
-    def mark_as_unread(service, query):
-        messages_to_mark = search_messages(query)
-        return service.users().messages().batchModify(
+    def mark_as_read(self,msg=''):
+        if msg=='':
+            print("What emails do you wanna 'mark as read'? Let's search them out!")
+            query=self.qry_parser()
+            messages_to_mark = self.read().search_messages(query)
+            self.service.users().messages().batchModify(
             userId='me',
             body={
-                'ids': [ msg['id'] for msg in messages_to_mark ],
-                'addLabelIds': ['UNREAD']
+                'ids': [msg['id'] for msg in messages_to_mark],
+                'removeLabelIds': ['UNREAD']
             }
-        ).execute()
+            ).execute()
+            print(f"Done! Marked {len(messages_to_mark)} as Read.")
+        else:
+            return self.service.users().messages().batchModify(
+            userId='me',
+            body={
+                'ids': [msg['id']],
+                'removeLabelIds': ['UNREAD']
+            }
+            ).execute()
 
-    def delete_messages(service, query):
-        messages_to_delete = search_messages(service, query)
-        # it's possible to delete a single message with the delete API, like this:
-        # service.users().messages().delete(userId='me', id=msg['id'])
-        # but it's also possible to delete all the selected messages with one query, batchDelete
-        return service.users().messages().batchDelete(
+    def mark_as_unread(self):
+        print("What emails do you wanna 'mark as unread'? Let's search them out!")
+        query=self.qry_parser()
+        messages_to_unmark = self.read().search_messages(query)
+        self.service.users().messages().batchModify(
         userId='me',
         body={
-            'ids': [ msg['id'] for msg in messages_to_delete]
+            'ids': [msg['id'] for msg in messages_to_unmark],
+            'addLabelIds': ['UNREAD']
         }
         ).execute()
-"""
+        print(f"Done! Marked {len(messages_to_unmark)} as Read.")
+
+    def delete_messages(self, msg=''):
+        if msg=='':
+            print("What emails do you wanna delete? Let's search them out!")
+            query=self.qry_parser()
+            messages_to_delete = self.read().search_messages(query)
+            self.service.users().messages().batchDelete(
+            userId='me',
+            body={
+                'ids': [msg['id'] for msg in messages_to_delete]
+            }
+            ).execute()
+            print(f"Done! Marked {len(messages_to_delete)} as Read.")
+        else:
+            return self.service.users().messages().delete(
+            userId='me',
+            body={
+                'ids': [msg['id']],
+            }
+            ).execute() 
+
 def main(key):
     x=mail(key)
     mes='?'
     while True:
-        y=input(f"Hi! What do you want me to do{mes} Press: \n1. To send out email(s) \n2. To read out the latest email(s) from your Inbox \n3. To search for specific email(s) and read them \n4. To mark as read/unread email(s) \n5. To delete email(s) \n6. To send feedback \n7. To clear local email repository \n8. To go back.\n")
+        y=input(f"Hi! What do you want me to do{mes} Press: \n1. To send out email(s) \n2. To read out the latest email(s) from your Inbox \n3. To search for specific email(s) and read them \n4. To mark as read emails \n5. To mark as unread emails \n6. To delete email(s) \n7. To send feedback \n8. To clear local email repository \n9. To go back.\n")
         mes=' now?'
         if y=='1':
             clear.clear()
@@ -550,57 +572,24 @@ def main(key):
             clear.clear()
             x.read()
         elif y=='3':
-            pass
+            clear.clear()
+            x.search()
         elif y=='4':
-            pass
+            clear.clear
+            x.mark_as_read()
         elif y=='5':
-            pass
+            clear.clear()
+            x.mark_as_unread()
         elif y=='6':
             clear.clear()
-            x.send('feedback')
+            x.delete_messages()
         elif y=='7':
-            return
+            clear.clear()
+            x.send('feedback')
+        elif y=='8':
+            shutil.rmtree(x.mail_path)
+            os.mkdir(x.mail_path)
+        elif y=='9':
+            break
         else:
             print("Invalid Input!")
-
-
-
-
-"""
-    def etc(self):
-
-
-
-        m={}
->>> m['in']='sent' 
->>> m['to']='pk' 
->>> m['after']='2014/01/01' 
->>> m
-{'in': 'sent', 'to': 'pk', 'after': '2014/01/01'}
->>> m.items()
-dict_items([('in', 'sent'), ('to', 'pk'), ('after', '2014/01/01')])
->>> l=m.items()
->>> l
-dict_items([('in', 'sent'), ('to', 'pk'), ('after', '2014/01/01')])
->>> l=list(l) 
->>> l
-[('in', 'sent'), ('to', 'pk'), ('after', '2014/01/01')]
->>> s=""     
->>> for i in l:
-...     x,y=i
-...     z=f"{x} : {y} "
-...     s+=z
-... 
->>> s
-'in : sent to : pk after : 2014/01/01 '
->>> s=""        
->>> for i in l:
-...     x,y=i
-...     z=f"{x}:{y} "   
-...     s+=z    
-... 
->>> s
-'in:sent to:pk after:2014/01/01 '
->>> s.rstrip()
-'in:sent to:pk after:2014/01/01'
-"""
